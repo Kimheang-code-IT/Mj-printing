@@ -1,0 +1,37 @@
+---
+description: Stock & POS build constraints from AGENT_STOCK_POS_FULL_IMPLEMENTATION.md — always apply when working in this repo.
+alwaysApply: true
+---
+
+# Stock & POS — always apply
+
+Canonical doc: `docs/AGENT_STOCK_POS_FULL_IMPLEMENTATION.md`  
+Skill: `.cursor/skills/stock-pos-build/SKILL.md`
+
+## Operating rules
+
+- Modify the existing modular monolith; do not rebuild or split into microservices.
+- Keep frontend, backend, DB, permissions, i18n, and tests synchronized.
+- Prefer editing existing modules; use safe reversible Alembic migrations.
+- Money uses `Decimal` / `NUMERIC` only.
+
+## Forbidden features (remove, do not add)
+
+Delivery Note · standalone UOM · product `uom_id`/Convert UOM UI · minimum stock · expired stock / expiry-only scheduler · customer credit limit · sale `deliveryFee` / `needsDelivery`.
+
+## Allowed field sets
+
+- Product: code, name, barcode, category, brand, purchase/sale price, profit % (calc), stock, image, note, status, timestamps.
+- Customer/Supplier: code, name, phone, address, current debt (read-only in CRUD), note, status, timestamps.
+- Lines may use height/width/qty → m²; persist calculation snapshots on save.
+- Sale totals: `grand_total = subtotal + other_charge - discount` (FE: `otherCharge`).
+- Purchase totals: `grand_total = subtotal + other_cost - discount` (FE: `otherCost`).
+
+## Progress snapshot
+
+- Frontend allowlist pages, dimensional POS/purchase UI, and Delivery/UOM/min-stock/expiry/credit-limit **UI removal** are largely done.
+- Still open: mock seed purge (`uoms`, `deliveryNotes`), `uom-conversions.ts` cleanup, stale i18n, backend routers/Alembic, deep report/statement exports.
+
+## Atomic writes
+
+Purchase, sale, return, payment, and stock adjustment each run in one DB transaction with stock movements + ledger updates. No partial commits. No silent negative stock.

@@ -1,0 +1,36 @@
+---
+description: Backend Stock & POS module, ledger, stock-mutation, and removal constraints.
+globs: backend/**/*.{py}
+alwaysApply: false
+---
+
+# Stock & POS — backend
+
+Skill: `.cursor/skills/stock-pos-build/SKILL.md` (backend status + remaining cleanup)
+
+## Platform
+
+- Keep FastAPI modules under `app/modules/...`; API prefix `/api/v1`.
+- Preserve success `{ data, meta }` and error `{ detail: { code, message, field_errors? } }` envelopes.
+- Money: `Decimal` / `NUMERIC` only.
+
+## Domain
+
+- Centralize stock mutation; every stock change writes an immutable movement.
+- Customer/supplier debt via ledgers; do not allow manual debt edits through normal CRUD.
+- Purchase/sale/return/payment: single transaction, rollback on any failure.
+- Accept dimensional line snapshots (`height`, `width`, `quantity`, `square_meter`, amounts).
+- Sale header extras: `other_charge` (not delivery fee). Purchase extras: `other_cost`.
+- Never allow silent negative stock.
+
+## Removals (Phase 4 — after safe migrate/backfill)
+
+- Do not register Delivery Note or UOM routers once those features are removed.
+- Drop product `uom_id`, min stock, expiry fields, and customer `credit_limit` only after backfill/data safety.
+- Drop expiry scheduler/Telegram expiry tasks when expiry is fully removed; keep Redis optional-safe.
+- Migrations: add/backfill first, remove FKs later, drop obsolete tables last. Seeds must be idempotent.
+
+## Reports
+
+- Statement rows: opening, debit, credit, running, closing.
+- Exports (PDF/Excel) must cover the full filtered result set, not only the current page.

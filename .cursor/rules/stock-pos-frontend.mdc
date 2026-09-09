@@ -1,0 +1,43 @@
+---
+description: Frontend must match Stock & POS route allowlist and field contracts; strip removed features from pages/menu/i18n.
+globs: frontend/**/*.{vue,ts,json}
+alwaysApply: false
+---
+
+# Stock & POS — frontend
+
+Skill map: `.cursor/skills/stock-pos-build/frontend-map.md`
+
+## Access & sync
+
+- Use repositories/composables for API access; do not call APIs ad hoc from pages.
+- Keep menu (`useMenu.ts`) + `stock-modules.ts` + `definePageMeta({ permission })` + `ROLE_DOCUMENT_TYPES` + i18n en/km aligned.
+- Products live under `/stock`, not `/products`.
+
+## Forbidden routes / UI
+
+Do not ship or restore: Delivery Notes, UOM pages, Expired Stock, credit limit, min-stock/expiry columns or alerts, POS post-checkout Delivery Note, `deliveryFee` / `needsDelivery`.
+
+## Forms & lists
+
+- Product forms: single General tab — sale price on main form; profit % calculated; no UOM / min stock / expiry.
+- Customer/Supplier forms: no credit limit; debt display read-only.
+- Stock list: no expiry or minimum-stock columns; stock value at cost is OK.
+- Dashboard: do not restore `lowStock` / `expiryLoss` / `pendingDeliveryNotes`.
+
+## POS / purchases
+
+- Line math from `~/utils/stock/line-calc` only — do not add new `uom-conversions` callers.
+- POS cart: height / width / m² / qty; checkout field **`otherCharge`** → API `other_charge`.
+- Purchase totals: **`otherCost`** → API `other_cost`.
+- Print invoice must use `otherCharge`, not delivery fee.
+
+## Cleanup targets (if touched)
+
+- Delete mock `uoms` / `deliveryNotes` seed collections when safe.
+- After removing UI, delete dead i18n keys for delivery/UOM/min-stock/expiry/credit-limit.
+- Prefer shared report filter/toolbar/export components; statement/profit shells may stay thin until APIs exist.
+
+## Tests
+
+Keep `nav-allowlist`, `line-calc`, repositories, mock-repositories, and print-documents specs consistent with the allowlist and contracts above.
